@@ -381,6 +381,14 @@ function _mosaico_civix_glob($pattern) {
  * @return bool
  */
 function _mosaico_civix_insert_navigation_menu(&$menu, $path, $item) {
+  if (!empty($item['no_duplicate_entries'])) {
+    $entry = _mosaico_civicx_find_menu_entry($menu, $item['url']);
+    if (!empty($entry)) {
+      // convention is to put an absolute path in the manual entry (HBS)
+      // This path is already somewhere else, thus we are aborting the add process here
+      return;
+    }
+  }
   // If we are done going down the path, insert menu
   if (empty($path)) {
     $menu[] = [
@@ -449,6 +457,28 @@ function _mosaico_civix_fixNavigationMenuItems(&$nodes, &$maxNavID, $parentID) {
       _mosaico_civix_fixNavigationMenuItems($nodes[$origKey]['child'], $maxNavID, $nodes[$origKey]['attributes']['navID']);
     }
   }
+}
+
+/**
+ * Searches the menu for a specific url
+ *
+ * @param $menu
+ * @param $url
+ *
+ * @return Entry, or NULL if not found
+ */
+function _mosaico_civicx_find_menu_entry($menu, $url) {
+  foreach ($menu as $key => $entry) {
+    if ($entry['attributes']['url'] === $url) {
+      return $entry['attributes'];
+    }
+    if (isset($entry['child'])) {
+      if (_mosaico_civicx_find_menu_entry($entry['child'], $url)) {
+        return $entry['attributes'];
+      }
+    }
+  }
+  return NULL;
 }
 
 /**
